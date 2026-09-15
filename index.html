@@ -297,7 +297,6 @@
 </div>
 
 <script>
-  // Default habits matching your requested aesthetic
   const defaultHabits = [
     { id: 1, name: "💊 vitamins", days: Array(31).fill(false) },
     { id: 2, name: "✨ hair ritual", days: Array(31).fill(false) },
@@ -311,11 +310,10 @@
     { id: 10, name: "📖 reading", days: Array(31).fill(false) }
   ];
 
-  let habits = JSON.parse(localStorage.getItem('notion_daily_routine_v2')) || defaultHabits;
-  let activeDay = 15; // Default active day matching your screenshot
+  let habits = JSON.parse(localStorage.getItem('notion_daily_routine_v3')) || defaultHabits;
+  let activeDay = 15;
   let hidePastDays = false;
 
-  // Populate active day dropdown (1 to 31)
   const select = document.getElementById('activeDaySelect');
   for (let i = 1; i <= 31; i++) {
     const opt = document.createElement('option');
@@ -335,14 +333,17 @@
 
     for (let d = startDay; d <= 31; d++) {
       const isActive = d === activeDay ? 'active-col' : '';
-      const checkMark = habits.some(h => h.days[d-1]) ? '✓' : '✓'; // or check icon symbol
       headerHTML += `<th class="${isActive}" id="col-head-${d}">✓ ${d}</th>`;
     }
+    headerHTML += `<th style="text-align: center; background: rgba(245, 235, 225, 0.95);">Progress</th>`;
     headerRow.innerHTML = headerHTML;
 
     // Build Body
     let bodyHTML = '';
     habits.forEach(habit => {
+      const checkedCount = habit.days.filter(Boolean).length;
+      const pct = Math.round((checkedCount / 31) * 100);
+
       bodyHTML += `<tr>`;
       bodyHTML += `<td>${habit.name} <button class="del-habit-btn" onclick="deleteHabit(${habit.id})" title="Delete habit">✕</button></td>`;
       
@@ -355,11 +356,13 @@
           </td>
         `;
       }
+
+      bodyHTML += `<td style="text-align: center; font-weight: 600; font-size: 0.78rem; color: var(--c-muted); background: rgba(245, 235, 225, 0.3);">${pct}%</td>`;
       bodyHTML += `</tr>`;
     });
 
     tbody.innerHTML = bodyHTML;
-    localStorage.setItem('notion_daily_routine_v2', JSON.stringify(habits));
+    localStorage.setItem('notion_daily_routine_v3', JSON.stringify(habits));
   }
 
   function toggleDay(habitId, dayIndex) {
@@ -428,7 +431,6 @@
     }
   }
 
-  // Initial render & scroll to today
   renderTable();
   setTimeout(jumpToToday, 100);
 </script>
