@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Daily Routine & Habit Tracker</title>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alice&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --c-cream: #F5EBE1;
+    --c-peach: #EBCFCC;
+    --c-sand: #E3D5CC;
+    --c-taupe: #D8BEB0;
+    --c-dark: #3E322D;
+    --c-muted: #7A6961;
+    --c-active: #F2D5D1;
+    --glass-border: rgba(216, 190, 176, 0.4);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; }
+  body { background: transparent; padding: 10px; color: var(--c-dark); }
+
+  h1, h2, h3, .serif { font-family: 'Alice', serif; font-weight: 400; }
+
+  /* Title Banner */
+  .title-banner {
+    background: rgba(235, 207, 204, 0.6);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    padding: 12px;
+    text-align: center;
+    margin-bottom: 12px;
+    box-shadow: 0 4px 20px rgba(216, 190, 176, 0.15);
+  }
+  .title-banner h1 {
+    font-size: 1.3rem;
+    color: var(--c-dark);
+    letter-spacing: 1px;
+  }
+
+  /* Toolbar */
+  .toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .toolbar-left, .toolbar-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .tool-btn {
+    background: rgba(255, 255, 255, 0.85);
+    border: 1px solid var(--glass-border);
+    padding: 6px 12px;
+    border-radius: 10px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--c-dark);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.2s;
+  }
+  .tool-btn:hover { background: #FFF; }
+  .tool-btn.active { background: var(--c-peach); border-color: var(--c-taupe); }
+
+  .active-day-select {
+    background: rgba(255, 255, 255, 0.85);
+    border: 1px solid var(--glass-border);
+    padding: 6px 10px;
+    border-radius: 10px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--c-dark);
+    outline: none;
+    cursor: pointer;
+  }
+
+  /* Table Container */
+  .table-card {
+    background: rgba(255, 255, 255, 0.75);
+    backdrop-filter: blur(16px);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 8px 30px rgba(216, 190, 176, 0.15);
+    margin-bottom: 12px;
+  }
+
+  .table-scroll-wrapper {
+    overflow-x: auto;
+    max-height: 420px;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+    white-space: nowrap;
+  }
+
+  th, td {
+    padding: 9px 12px;
+    font-size: 0.82rem;
+    border-bottom: 1px solid rgba(216, 190, 176, 0.2);
+  }
+
+  th {
+    background: rgba(245, 235, 225, 0.9);
+    font-weight: 600;
+    color: var(--c-muted);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+
+  /* Sticky First Column (Habit Name) */
+  th:first-child, td:first-child {
+    position: sticky;
+    left: 0;
+    background: rgba(245, 235, 225, 0.95);
+    z-index: 11;
+    min-width: 170px;
+    max-width: 170px;
+    text-overflow: ellipsis;
+    overflow: hidden;
+  }
+  th:first-child { z-index: 12; }
+
+  td:first-child {
+    background: rgba(255, 255, 255, 0.95);
+    font-weight: 500;
+  }
+
+  /* Active Day Column Highlight */
+  th.active-col, td.active-col {
+    background: var(--c-active) !important;
+  }
+
+  /* Checkbox styling */
+  .checkbox-cell {
+    text-align: center;
+    cursor: pointer;
+  }
+
+  input[type="checkbox"] {
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 4px;
+    border: 1.5px solid var(--c-taupe);
+    background: #FFF;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s ease;
+  }
+
+  input[type="checkbox"]:checked {
+    background: var(--c-dark);
+    border-color: var(--c-dark);
+  }
+
+  input[type="checkbox"]:checked::after {
+    content: '✓';
+    color: #FFF;
+    font-size: 0.65rem;
+    font-weight: 700;
+  }
+
+  .del-habit-btn {
+    background: transparent;
+    border: none;
+    color: var(--c-muted);
+    cursor: pointer;
+    font-size: 0.75rem;
+    float: right;
+    padding: 0 4px;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  tr:hover .del-habit-btn { opacity: 1; }
+  .del-habit-btn:hover { color: #a84e4e; }
+
+  /* Footer Controls */
+  .footer-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 14px;
+    background: rgba(245, 235, 225, 0.5);
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .add-habit-group {
+    display: flex;
+    gap: 8px;
+    flex: 1;
+    max-width: 350px;
+  }
+
+  .habit-input {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.85);
+    border: 1px solid var(--glass-border);
+    padding: 7px 12px;
+    border-radius: 10px;
+    font-size: 0.8rem;
+    outline: none;
+    color: var(--c-dark);
+  }
+
+  .btn {
+    background: var(--c-dark);
+    color: var(--c-cream);
+    border: none;
+    padding: 7px 14px;
+    border-radius: 10px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .btn:hover { opacity: 0.85; }
+
+  .reset-link {
+    background: transparent;
+    border: none;
+    font-size: 0.78rem;
+    color: var(--c-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    text-decoration: underline;
+  }
+  .reset-link:hover { color: var(--c-dark); }
+</style>
+</head>
+<body>
+
+<div class="title-banner">
+  <h1 class="serif">☀️ DAILY ROUTINE</h1>
+</div>
+
+<div class="toolbar">
+  <div class="toolbar-left">
+    <button class="tool-btn" id="hidePastBtn" onclick="toggleHidePast()">
+      <span id="hidePastIcon">👁️</span> <span id="hidePastText">Hide Past Days</span>
+    </button>
+    <button class="tool-btn" onclick="jumpToToday()">
+      📍 Jump to Today
+    </button>
+  </div>
+  <div class="toolbar-right">
+    <span style="font-size: 0.78rem; font-weight: 600; color: var(--c-muted);">Active Day:</span>
+    <select id="activeDaySelect" class="active-day-select" onchange="changeActiveDay(this.value)">
+    </select>
+  </div>
+</div>
+
+<div class="table-card">
+  <div class="table-scroll-wrapper" id="tableScrollWrapper">
+    <table id="routineTable">
+      <thead>
+        <tr id="tableHeaderRow">
+          <th>Aa Name</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody">
+      </tbody>
+    </table>
+  </div>
+
+  <div class="footer-row">
+    <div class="add-habit-group">
+      <input type="text" id="newHabitInput" class="habit-input" placeholder="+ New habit... (e.g. 💧 skincare, 🧘 yoga)" onkeydown="if(event.key==='Enter') addHabit()">
+      <button class="btn" onclick="addHabit()">Add</button>
+    </div>
+    <button class="reset-link" onclick="resetMonth()">
+      🔄 reset month
+    </button>
+  </div>
+</div>
+
+<script>
+  // Default habits matching your requested aesthetic
+  const defaultHabits = [
+    { id: 1, name: "💊 vitamins", days: Array(31).fill(false) },
+    { id: 2, name: "✨ hair ritual", days: Array(31).fill(false) },
+    { id: 3, name: "🧝 guasha", days: Array(31).fill(false) },
+    { id: 4, name: "📋 task 1+3", days: Array(31).fill(false) },
+    { id: 5, name: "🎯 MY MAIN GOAL", days: Array(31).fill(false) },
+    { id: 6, name: "📹 youtube", days: Array(31).fill(false) },
+    { id: 7, name: "🌐 razu la", days: Array(31).fill(false) },
+    { id: 8, name: "☀️ Pinterest", days: Array(31).fill(false) },
+    { id: 9, name: "🤸 stretching", days: Array(31).fill(false) },
+    { id: 10, name: "📖 reading", days: Array(31).fill(false) }
+  ];
+
+  let habits = JSON.parse(localStorage.getItem('notion_daily_routine_v2')) || defaultHabits;
+  let activeDay = 15; // Default active day matching your screenshot
+  let hidePastDays = false;
+
+  // Populate active day dropdown (1 to 31)
+  const select = document.getElementById('activeDaySelect');
+  for (let i = 1; i <= 31; i++) {
+    const opt = document.createElement('option');
+    opt.value = i;
+    opt.text = i === 15 ? `Day 15 (Today)` : `Day ${i}`;
+    if (i === activeDay) opt.selected = true;
+    select.appendChild(opt);
+  }
+
+  function renderTable() {
+    const headerRow = document.getElementById('tableHeaderRow');
+    const tbody = document.getElementById('tableBody');
+
+    // Build Header
+    let headerHTML = `<th>Aa Name</th>`;
+    const startDay = hidePastDays ? activeDay : 1;
+
+    for (let d = startDay; d <= 31; d++) {
+      const isActive = d === activeDay ? 'active-col' : '';
+      const checkMark = habits.some(h => h.days[d-1]) ? '✓' : '✓'; // or check icon symbol
+      headerHTML += `<th class="${isActive}" id="col-head-${d}">✓ ${d}</th>`;
+    }
+    headerRow.innerHTML = headerHTML;
+
+    // Build Body
+    let bodyHTML = '';
+    habits.forEach(habit => {
+      bodyHTML += `<tr>`;
+      bodyHTML += `<td>${habit.name} <button class="del-habit-btn" onclick="deleteHabit(${habit.id})" title="Delete habit">✕</button></td>`;
+      
+      for (let d = startDay; d <= 31; d++) {
+        const isActive = d === activeDay ? 'active-col' : '';
+        const isChecked = habit.days[d-1] ? 'checked' : '';
+        bodyHTML += `
+          <td class="checkbox-cell ${isActive}" onclick="toggleDay(${habit.id}, ${d-1})">
+            <input type="checkbox" ${isChecked} onclick="event.stopPropagation(); toggleDay(${habit.id}, ${d-1})">
+          </td>
+        `;
+      }
+      bodyHTML += `</tr>`;
+    });
+
+    tbody.innerHTML = bodyHTML;
+    localStorage.setItem('notion_daily_routine_v2', JSON.stringify(habits));
+  }
+
+  function toggleDay(habitId, dayIndex) {
+    const habit = habits.find(h => h.id === habitId);
+    if (habit) {
+      habit.days[dayIndex] = !habit.days[dayIndex];
+      if (habit.days[dayIndex]) {
+        confetti({ particleCount: 15, spread: 30, origin: { y: 0.7 } });
+      }
+      renderTable();
+    }
+  }
+
+  function addHabit() {
+    const input = document.getElementById('newHabitInput');
+    const name = input.value.trim();
+    if (name) {
+      habits.push({
+        id: Date.now(),
+        name: name,
+        days: Array(31).fill(false)
+      });
+      input.value = '';
+      renderTable();
+    }
+  }
+
+  function deleteHabit(id) {
+    habits = habits.filter(h => h.id !== id);
+    renderTable();
+  }
+
+  function changeActiveDay(day) {
+    activeDay = parseInt(day);
+    renderTable();
+    jumpToToday();
+  }
+
+  function toggleHidePast() {
+    hidePastDays = !hidePastDays;
+    const btn = document.getElementById('hidePastBtn');
+    const text = document.getElementById('hidePastText');
+    if (hidePastDays) {
+      btn.classList.add('active');
+      text.innerText = 'Show All Days';
+    } else {
+      btn.classList.remove('active');
+      text.innerText = 'Hide Past Days';
+    }
+    renderTable();
+  }
+
+  function jumpToToday() {
+    const targetCol = document.getElementById(`col-head-${activeDay}`);
+    if (targetCol) {
+      targetCol.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+    }
+  }
+
+  function resetMonth() {
+    if (confirm('Reset all completions for the entire month?')) {
+      habits.forEach(h => {
+        h.days = Array(31).fill(false);
+      });
+      renderTable();
+    }
+  }
+
+  // Initial render & scroll to today
+  renderTable();
+  setTimeout(jumpToToday, 100);
+</script>
+</body>
+</html>
