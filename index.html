@@ -246,6 +246,7 @@
     align-items: center;
     gap: 4px;
     text-decoration: underline;
+    transition: color 0.2s;
   }
   .reset-link:hover { color: var(--c-dark); }
 </style>
@@ -313,6 +314,7 @@
   let habits = JSON.parse(localStorage.getItem('notion_daily_routine_v3')) || defaultHabits;
   let activeDay = 15;
   let hidePastDays = false;
+  let isResetConfirming = false;
 
   const select = document.getElementById('activeDaySelect');
   for (let i = 1; i <= 31; i++) {
@@ -369,7 +371,7 @@
     const habit = habits.find(h => h.id === habitId);
     if (habit) {
       habit.days[dayIndex] = !habit.days[dayIndex];
-      if (habit.days[dayIndex]) {
+      if (habit.days[dayIndex] && typeof confetti === 'function') {
         confetti({ particleCount: 15, spread: 30, origin: { y: 0.7 } });
       }
       renderTable();
@@ -423,12 +425,30 @@
   }
 
   function resetMonth() {
-    if (confirm('Reset all completions for the entire month?')) {
-      habits.forEach(h => {
-        h.days = Array(31).fill(false);
-      });
-      renderTable();
+    const btn = document.querySelector('.reset-link');
+    
+    if (!isResetConfirming) {
+      isResetConfirming = true;
+      btn.innerHTML = '⚠️ Click again to confirm reset';
+      btn.style.color = '#a84e4e';
+      
+      setTimeout(() => {
+        isResetConfirming = false;
+        btn.innerHTML = '🔄 reset month';
+        btn.style.color = 'var(--c-muted)';
+      }, 3000);
+      return;
     }
+
+    habits.forEach(h => {
+      h.days = Array(31).fill(false);
+    });
+
+    isResetConfirming = false;
+    btn.innerHTML = '🔄 reset month';
+    btn.style.color = 'var(--c-muted)';
+
+    renderTable();
   }
 
   renderTable();
